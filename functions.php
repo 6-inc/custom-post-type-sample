@@ -116,3 +116,37 @@ class blog {
     }
 }
 $blog = new blog();
+
+
+
+// カスタムフィールド
+/*-------------------------------------------------------------------------------------------*/
+/* blog custom field */
+/*-------------------------------------------------------------------------------------------*/
+add_action('add_meta_boxes_blog', 'blog_add_custom_field');
+// 投稿画面に挿入する関数
+function blog_add_custom_field(){
+    if(function_exists('blog_add_custom_field')){
+        add_meta_box('blog_info', 'ブログ識別情報（管理用）', 'insert_blog_info', 'blog', 'normal', 'high');
+    }
+}
+
+function insert_blog_info(){
+    global $post;
+    wp_nonce_field(wp_create_nonce(__FILE__), 'my_nonce');
+    echo '<p>商品の管理IDを記入してください：<label class="hidden" for="blog_id">ブログID</label><input type="text" name="blog_id" size="10" value="'.esc_html(get_post_meta($post->ID, 'blog_id', true)).'" /></p>';
+}
+
+function my_box_save($post_id) {
+    global $post;  //編集中の記事に関するデータを保存
+    $my_nonce = isset($_POST['my_nonce']) ? $_POST['my_nonce'] : null; //設定したnonce を取得（CSRF対策）
+    if(!wp_verify_nonce($my_nonce, wp_create_nonce(__FILE__))) {  //nonce を確認し、値が書き換えられていれば、何もしない（CSRF対策）
+        return $post_id;
+    }
+    if(defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) { return $post_id; } //自動保存ルーチンかどうかチェック。そうだった場合は何もしない（記事の自動保存処理として呼び出された場合の対策）
+    if(!current_user_can('edit_post', $post->ID)) { return $post_id; } //ユーザーが編集権限を持っていない場合は何もしない。
+    if($_POST['post_type'] == 'blog'){  //'blog' 投稿タイプの場合のみ実行
+    update_post_meta($post->ID, 'blog_id', $_POST['blog_id']);
+}
+}
+add_action('save_post', 'my_box_save');
