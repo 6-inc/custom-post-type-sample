@@ -152,3 +152,23 @@ function my_box_save($post_id) {
     }
 }
 add_action('save_post', 'my_box_save');
+
+
+// カスタムタクソノミー
+function create_taxonomies() {
+    // ブログ用のカテゴリー
+    register_taxonomy(
+        'blog-cat',
+        'blog',
+        array(
+            'hierarchical' => true,
+            'update_count_callback' => '_update_post_term_count',
+            'label' => 'ブログカテゴリ',
+            'singular_label' => 'ブログカテゴリ',
+            'public' => true,
+            'show_ui' => true
+        )
+    );
+}
+
+add_action( 'init', 'create_taxonomies' );
